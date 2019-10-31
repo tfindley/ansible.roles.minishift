@@ -24,15 +24,6 @@
   when: item in ansible_facts.getent_passwd
 
 
-# Use the following code if you want to prompt for the username to be added to the libvirt group,
-# - name: Add user {{user_name}} to libvirt group
-#   user:
-#     name: "{{ user_name }}"
-#     groups: "{{libvirt_group}}"
-#     append: yes
-#   when: user_name in ansible_facts.getent_passwd
-
-
 # Enable the service
 - name: LibVirtD - Start and Enable at Startup
   service:

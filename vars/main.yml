@@ -3,5 +3,5 @@
 ms_dl: "https://github.com/minishift/minishift/releases/download/v{{ms_ver}}/minishift-{{ms_ver}}-linux-amd64.tgz"
 
 user_list: 
-- "philote"
-- "tristan"
+- "{{ ansible_env.SUDO_USER }}"
+- "{{ user_name }}"

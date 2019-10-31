@@ -73,6 +73,6 @@
 - include_tasks: hypervisor.yml
 - include_tasks: minishift.yml
 
-# This has not yet been tested but should work
-- include_tasks: init.yml
-  when: init == True
+# This is not yet functional. Please see README.md
+# - include_tasks: init.yml
+#   when: init == True

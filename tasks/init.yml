@@ -10,6 +10,7 @@
 # If Minishift is installed we'll check whether it is running
 - name: Getting mineshift version
   shell: "{{ms_inst}}/minishift status | grep Minishift | grep Running"
+  ignore_errors: yes
   register: ms_status
   when: ms_dst.stat.exists
 
