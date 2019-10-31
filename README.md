@@ -1,7 +1,7 @@
 Role Name
 =========
 
-A brief description of the role goes here.
+A simple role which will install Minishift and its dependencies, including libvirt.
 
 Requirements
 ------------
@@ -24,8 +24,18 @@ Example Playbook
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
     - hosts: servers
+      become: yes
+      gather_facts: true
       roles:
-         - { role: username.rolename, x: 42 }
+        - role: '~/ansible/roles/minishift'
+      vars:
+      vars_prompt:
+    # Use the following code if you want to prompt for the username to be added to the libvirt group,
+      # - name: user_name
+      #   prompt: Enter the user name for password reset
+      #   private: no
+
+
 
 License
 -------
