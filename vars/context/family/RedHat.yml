@@ -1,0 +1,9 @@
+hypervisor_install:
+- libvirt
+- qemu-kvm
+
+kvm_driver_binary_src: https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-centos7
+kvm_driver_binary_dst: /usr/local/bin/docker-machine-driver-kvm
+
+libvirt_group: libvirt
+libvirt_service: libvirtd

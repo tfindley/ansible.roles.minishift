@@ -1,0 +1,5 @@
+---
+# defaults file for minishift
+init: False
+ms_ver: "1.34.1"
+ms_inst: /opt/minishift

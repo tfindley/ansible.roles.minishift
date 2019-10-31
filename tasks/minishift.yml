@@ -1,0 +1,63 @@
+# We need this later on when we initially deploy or upgrade Minishift.
+- name: Stat Minishift destination
+  stat:
+    path: "{{ms_inst}}"
+  register: ms_dst
+
+# If Minishift is installed we'll check the version number
+- name: Getting mineshift version
+  shell: "{{ms_inst}}/minishift version | cut -d 'v' -f 2 | cut -d '+' -f 1"
+  register: ms_binver
+  when: ms_dst.stat.exists
+
+# If Minishift is installed we'll check whether it is running
+- name: Getting mineshift version
+  shell: "{{ms_inst}}/minishift status | grep Minishift | grep Running"
+  register: ms_status
+  when: ms_dst.stat.exists
+
+# If Minishift is not installed or the version we want to install is newer than what we already have installed, download Minishift.
+- name: Download and unarchive Minishift
+  unarchive:
+    src: "{{ms_dl}}"
+    dest: /tmp
+    remote_src: yes
+  when: ms_dst.stat.exists == False or (ms_binver.stdout < ms_ver)
+
+# If Minishift is already installed and running but we want to upgrade, Stop Minishift
+- name: Stop Minishift
+  shell: "{{ms_inst}}/minishift stop"
+  when: ms_status.rc == 0
+
+# If Minishift is already installed and we're upgrading, delete the original version of Minishift
+- name: Remove old minishift version
+  file:
+    path: "{{ms_inst}}"
+    state: absent
+  when: ms_dst.stat.exists and (ms_binver.stdout < ms_ver)
+
+# Stat the extraction location as we need to check its extracted correctly.
+- name: Stat Minishift extraction location
+  stat:
+    path: "/tmp/minishift-{{ms_ver}}-linux-amd64"
+  register: ms_tmp
+
+# As Ansible doesnt (yet) have a mv module, we run mv in the command module
+- name: Install Minishift to {{ms_inst}}
+  command: "mv /tmp/minishift-{{ms_ver}}-linux-amd64 {{ms_inst}}"
+  when: ms_tmp.stat.exists == True and ms_dst.stat.exists == False
+
+# Installation is complete so we'll clean up the original extraction location, even though it shoud be gone
+- name: Cleanup - Remove Minishift extraction location
+  file:
+    path: "/tmp/minishift-{{ms_ver}}-linux-amd64"
+    state: absent
+
+# Now we can add it to the system-weide Path ENV. Note that we never call minishift without using hte full path incase this has not taken affect.
+- name: Add Minishift to system-wide PATH
+  template:
+    src: etc/profile.d/minishift-path.sh
+    dest: /etc/profile.d/minishift-path.sh
+    owner: root
+    group: root
+    mode: 0644

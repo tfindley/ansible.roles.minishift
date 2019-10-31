@@ -1,0 +1,57 @@
+
+# WARNING: Untested!
+
+# We need this later on when we initially deploy or upgrade Minishift.
+- name: Stat Minishift destination
+  stat:
+    path: "{{ms_inst}}"
+  register: ms_dst
+
+# If Minishift is installed we'll check whether it is running
+- name: Getting mineshift version
+  shell: "{{ms_inst}}/minishift status | grep Minishift | grep Running"
+  register: ms_status
+  when: ms_dst.stat.exists
+
+# First run of Minishift takes a LONG time so we run this task async. We'll check back on it once we've deployed the prometheus addon
+- name: Start minishift - This will take some time
+  shell: "{{ms_inst}}/minishift start"
+  async: 60
+  poll: 30
+  register: init_sleeper
+  when: ms_status.rc != 0
+
+# Copy the prometheus addon file to /tmp
+- name: Copy file with owner and permission, using symbolic representation
+  copy:
+    src: addons/prometheus
+    dest: /tmp/prometheus
+    owner: root
+    group: root
+    mode: 0775
+
+# Check on our minishift Start command from earlier.
+- name: Check on async task
+  async_status:
+    jid: "{{ init_sleeper.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 30
+
+# Now minishift is running we can install the addon
+- name: Install prometheus stats addon
+  shell: "{{ms_inst}}/minishift addon install /tmp/prometheus"
+
+- name: Enable prometheus stats addon
+  shell: "{{ms_inst}}/minishift addon enable prometheus"
+
+- name: Enable prometheus stats
+  shell: "{{ms_inst}}/minishift openshift service prometheus -n kube-system"
+
+- name: Enable admin-user addon
+  shell: "{{ms_inst}}/minishift addon enable admin-user"
+
+- name: Cleanup - Remove prometheus stats addon extraction
+  file:
+    path: "/tmp/prometheus"
+    state: absent

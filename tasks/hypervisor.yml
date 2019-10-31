@@ -1,0 +1,52 @@
+# Install the hypervisor packages using YUM/APT/DNF - We will stick with the stock ones. For CentOS/Fedora this assume EPEL has been enabled.
+- name: Install hypervisor packages
+  package:
+    name: "{{item}}"
+    state: present
+  with_items: "{{hypervisor_install}}"
+  ignore_errors: True
+
+
+- name: Download KVM driver binary
+  get_url:
+    url: "{{kvm_driver_binary_src}}"
+    dest: "{{kvm_driver_binary_dst}}"
+    mode: '0755'
+
+
+# We will add users here to the libvirt group. We will add the ansible user so we have deploy/control containers with Ansible
+- name: Add users to {{libvirt_group}} group
+  user:
+    name: "{{ item }}"
+    groups: "{{libvirt_group}}"
+    append: yes
+  with_items: "{{user_list}}"
+  when: item in ansible_facts.getent_passwd
+
+
+# Use the following code if you want to prompt for the username to be added to the libvirt group,
+# - name: Add user {{user_name}} to libvirt group
+#   user:
+#     name: "{{ user_name }}"
+#     groups: "{{libvirt_group}}"
+#     append: yes
+#   when: user_name in ansible_facts.getent_passwd
+
+
+# Enable the service
+- name: LibVirtD - Start and Enable at Startup
+  service:
+    name: "{{libvirt_service}}"
+    state: started
+    enabled: yes
+
+
+# Check networking
+- name: Check for libvirtd networking
+  shell: "virsh net-info default | grep Active | grep yes"
+  ignore_errors: true
+  register: libvirtd_net
+
+- fail:
+    msg: "Host {{ ansible_hostname }} LibVirtD does not seem to have functional virtual networking. Please investigate"
+  when: libvirtd_net.rc != 0

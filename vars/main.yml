@@ -1,0 +1,7 @@
+---
+# vars file for minishift
+ms_dl: "https://github.com/minishift/minishift/releases/download/v{{ms_ver}}/minishift-{{ms_ver}}-linux-amd64.tgz"
+
+user_list: 
+- "philote"
+- "tristan"
