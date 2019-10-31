@@ -24,6 +24,14 @@ There are two main variables that can be used with this role, however both have 
 
 - init: This variable is currently broken - Do not use! - See Bugs - True / False (bool) - When set to True init will trigger tasks/init.yml which will start up minishift on a machine. This is incredibly useful with new deployments as the first start can take upwards of 15 minutes. 
 - user_name: prompt (string) - The role file will prompt for a username of a user to be added to libvirt group so they can start/stop minishift. 
+- ms_inst: /opt/minishift - The install path you wish to use for minishift. Recommended to use /opt as this is for optional packages
+- ms_ver: "1.34.1" - The version that is downloaded. Specify in this in accordance with their download url.
+  This will resolve as follows: "https://github.com/minishift/minishift/releases/download/v{{ms_ver}}/minishift-{{ms_ver}}-linux-amd64.tgz" will become "https://github.com/minishift/minishift/releases/download/v1.34.1/minishift-1.34.1-linux-amd64.tgz"
+  This has to be done like this as they do not use 'latest' in their filenames. When the downloaded tgz file is extracted it extracts to a version specific folder. We extract it into /tmp and then move it to the ms_inst location afterwards, removing the verison number.
+
+Upgrading Minishift
+-------------------
+The verison number variable is also key in upgrading minishift. It will compare this against the verison number installed. If it is newer it will stop Minishift, remove the existing version and install the new version.
 
 Dependencies
 ------------
@@ -55,6 +63,8 @@ Including an example of how to use your role (for instance, with variables passe
         - role: '/home/tristan/ansible/roles/minishift'
       vars:
         init: False # Do not change this for now - Currently broken. See README.md
+        ms_ver: "1.34.1"
+        ms_inst: /opt/minishift
       vars_prompt:
     # Use the following code if you want to prompt for the username to be added to the libvirt group,
       - name: user_name
